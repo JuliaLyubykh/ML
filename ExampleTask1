@@ -1,0 +1,35 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.preprocessing import StandsartScaler
+from sklearn.decomposition import PCA
+
+iris = datasets.load_iris()
+data = pd.DataFrame(iris['data'], columns = iris['feature_names'])
+data['target'] = pd.Series(iris['target'])
+data['target_name'] = data['target'].replace([0,1,2], list(iris['target_names']))
+
+sns.scatterplot(data = data, x = 'petal lenght (cm)', y = 'petal width (cm)', hue = 'target_name')
+
+features = ['petal lenght (cm)', 'petal width (cm)']
+data = data[features]
+
+st = StandartScaler()
+st.fit(data)
+data_sc = st.transfrom(data)
+pd.DataFrame(data_sc, columns = features)
+
+pca = PCA()
+iris_pca = pca.fit_transform(data_sc)
+pca_iris = pd.DataFrame(iris_pca. columns = ['pc1', 'pc2'])
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize = (15,6))
+sns.scatterplot(data = data, x = 'petal lenght (cm)', y = 'petal wight (cm)', hue = 'target_name', ax = ax1)
+sns.scatterplot(data = pca_iris, x = 'pc1', y = 'pc2', hue = 'target_name', ax = ax2)
+
+pca.components_
+pc1 = 0.70710678 * data['petal length (com)'] + 0.70710678 * data['petal width (cm)']
+pc2 = -0.70710678 * data['petal length (com)'] + 0.70710678 * data['petal width (cm)']
+
+pca.explained_variance_ratio_
