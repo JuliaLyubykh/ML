@@ -16,3 +16,100 @@ from sklearn.feature_selection import SequantialFeatureSelector
 from sklearn.feature_selection import ExhaustiveFeatureSelector
 from sklearn.feature_selection import RFE
 
+df = pd.read_csv('data.csv')
+df.head(10).T
+
+#фильтрация
+df = df.drop_duplicates()
+df.info
+
+df.describe().T
+
+target = 'Diabetes_binary'
+bool_vars = (df.unique()[df.unique = 2].index.drop(labels = target))
+num_vars = [var for var in df.columns if vat not in bool_vars and var != target]
+
+df['Diabetes_binary'].value)counts(1).plot(kind = 'barh', figsize=(10,2), color = '#FF0805').spines[['top', 'right']].set_visible(False)
+plt.title('Diabetes_binary Distribution (%)', fontsize = 10)
+plt.yticks(ticks = [0,1], labels = ['Non-Diabetic', 'Diabetic'])
+
+#корреляция с таргетом
+(df.drop(targer, axis =1).corrwith(df.Diabetes_binary).sort_values(ascending = False).plot(hind='bar', figsize = (12,4), title = 'Diabetes_binary Correlation', alpla = 0.8, zorder = 3, color ='#2CE8C3').spines[['top', 'right', 'left']].set_visible(False))
+plt.grid(axis = 'y', linestyle = '--', alpha = .5)
+plt.stucks(rotation = 45, ha = 'right', size = 10)
+
+corr_df = pd.DataFrame(df.drop(target,axis=1).corrwith(df.Diabetes_binary)).sort_values(0, ascending = False)
+corr_df[abs(corr_df[0])>0.15]
+corr_df[abs(corr_df[0])=<0.15]
+
+#корреляционная матрица признаков
+data_heatmap = df
+custom_cmap = mpl.colors.LinearSefmentedColormap.from_list('custom',['#E8650C', 'white', '#FF851B'])
+mask = mp.triu(np.ones_like(data_heatmap.corr(),dtype = bool))
+lengthsize = 30
+fig, ax = plt.subplots(figsize = (lengthsize, lengthsize*.35), dpi = 200)
+heatmap = sns.heatmap(data_heatmap.corr(), cmap = sutom_cmap, mask = mask, annot = False, vmin = -.8, vmax = .8)
+heatmap.set_title('Correlation Heatmap', fontdict = {'fontsize': 24}, pad = 16)
+ax.tick_params(axis='both', which='major',labelsize = 20)
+plt.stp(ax.xaxis.get_majorticklabels(), rotation = 45, ha = 'right')
+
+#хи-квадрат
+chisquare = pd.DataFrame(chi2(X, y)).T.set_index(X.columns).rename(columns = {0:'chi2_score', 1:'chi2_pValue'}).sort_values(by = 'chi2_score', ascending = False)
+
+mut_info = mutual_info_classif(X[bool_vars], y)
+mut_df = pd.DataFrame(mut_info, columns = ['Mutual_info'], index = X[bool_vars].columns)
+mut_df.sort_values(by = 'Mutual_info', ascending = False)
+
+#построение baseline
+r_state = 42
+rf_clf = RandomForestClassifier(random_state = r_state)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = r_state, stratify = y)
+
+rf_clf.fit(X_train, y_train)
+y_rf_0 = rf_clf.predict(X_test)
+roc_auc_score(y_rf_0, y_test)
+
+rf_clf.fir(X_train.drop('NoDocbcCost', axis = 1), y_train)
+roc_auc_score(y_rf_1, y_test)
+
+scaler = StandardScaler()
+X_train_sc = scaler.fit_transform(X_train)
+X_test_sc = scaler.transform(X_test)
+
+#логистическая регрессия
+lr_clf = LogisticRegression(penalty = 'l1', C = 0.01, solver = 'bilinear')
+lr_clf.fit(X_train_sc, y_train)
+y_lr_0 = lr_clf.predict(X_test_sc)
+roc_auc_score(y_lr_0, y_test)
+
+coef_df = pd.DataFrame(zip(Xtrain.columns, np.transpose(lr_clf.coef_[0])),columns = ['features', 'coef'])
+
+y_rf_2 = rf_clf.predict(X_test)
+rf_clf.feature_importances_
+
+#обертки
+forw_feature = SequentialFeatureSelector(lr_clf, k_featues = 'best', forward = True, n_job = -1)
+forw_feature.fit(X_train, y_train)
+features = list(forw_feature.k_feature_names)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
