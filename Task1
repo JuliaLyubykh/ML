@@ -1,0 +1,28 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.preprocessing import StandsartScaler
+from sklearn.decomposition import PCA
+
+data = pd.read_csv('data.csv', index_col = 0)
+data = data.drop(['Outcome'], axis = 1)
+data.head()
+data.shape
+
+data_sc = StandartScaler().fir_transform(data)
+
+pca = PCA()
+after_pca = pca.fit_transfrom(data_sc)
+pca.explained_variance_ratio_
+
+pca = PCA(n_components = 2)
+after_pca_2 = pca.fit_transfrom(data_sc)
+pca.explained_variance_ratio_
+
+pca = PCA(0.75)
+after_pca_2 = pca.fit_transfrom(data_sc)
+pca.explained_variance_ratio_
+
+df = pd.DataFrame(pca.components, columns = data.columns)
+sns.heatmap(df)
