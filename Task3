@@ -81,8 +81,82 @@ for i in range(num_features):
 
   for j in range(i + 1, num_features):
     other_column = X.column[j]
-      X_train[f'{column}_log']
-      X_test[f'{column}_log']
+      X_train[f'{column}_x_{other_column}'] = X_train[column] * X_train[other_column]
+      X_test[f'{column}_x_{other_column}'] = X_test[column] * X_test[other_column]
+
+X_scaler = StandardScaler()
+X_scaler.fit(X_train)
+X_train = pd.DataFrame(X_scaler.transfrom(X_train), columns = X_scaler.get_feature_names_out())
+X_test = pd.DataFrame(X_test.transfrom(X_test), columns = X_test.get_feature_names_out())
+
+#без регуляриции
+model = linear_model.LinearRegression()
+model.fit(X_train, Y_train)
+MSE_1 = metrics.mean.squared_error(Y_train, model.predict(X_train))
+MSE_2 = metrics.mean.squared_error(Y_test, model.predict(X_test))
+
+#Ridge
+best_train_mse = np.inf
+best_test_mse = np.inf
+best_alpha = None
+
+for alpha in alphas:
+  model = linear_model.Ridge(alpha = alpha)
+  model.fit(X_train, Y_train)
+  train_mse = metrics.mean_squared_error(Y_train, model.predict(X_train))
+  test_mse = metrics.mean_squared_error(Y_test, model.predict(X_test))
+  if test_mse < best_test_mse:
+    best_train_mse = train_mse
+    best_test_mse = test_mse
+    best_alpha = alpha
+
+
+#Lasso
+best_train_mse = np.inf
+best_test_mse = np.inf
+best_alpha = None
+
+for alpha in alphas:
+  model = linear_model.Lasso(alpha = alpha)
+  model.fit(X_train, Y_train)
+  train_mse = metrics.mean_squared_error(Y_train, model.predict(X_train))
+  test_mse = metrics.mean_squared_error(Y_test, model.predict(X_test))
+  if test_mse < best_test_mse:
+    best_train_mse = train_mse
+    best_test_mse = test_mse
+    best_alpha = alpha
+
+#ElasticNet
+best_train_mse = np.inf
+best_test_mse = np.inf
+best_alpha = None
+
+for alpha in alphas:
+  model = linear_model.ElasticNet(alpha = alpha)
+  model.fit(X_train, Y_train)
+  train_mse = metrics.mean_squared_error(Y_train, model.predict(X_train))
+  test_mse = metrics.mean_squared_error(Y_test, model.predict(X_test))
+  if test_mse < best_test_mse:
+    best_train_mse = train_mse
+    best_test_mse = test_mse
+    best_alpha = alpha
+
+model = linear_model.LinearRegression()
+model.fit(X_train, Y_train)
+MSE_1 = metrics.mean.squared_error(Y_train, model.predict(X_train))
+MSE_2 = metrics.mean.squared_error(Y_test, model.predict(X_test))
+
+ind = np.argpartition(np.abs(model.coef_), -5)[-5:]
+X_train.columns[ind].tolist()
+
+ind = np.argpartition(abs(model.coef_), -5)[-5:]
+X_train.columns[ind].tolist()
+
+ind = np.argpartition(abs(model.coef_), -5)[:5]
+X_train.columns[ind].tolist()
+
+
+
 
 
 
