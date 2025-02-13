@@ -1,0 +1,91 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score, roc_auc_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.neighbors import KNeightborsClassifier
+
+data = load_breast_cancer()
+X, y =data.data, data.target
+
+X_train, X_test, y_train, y_test = train_test_cplit(X, y, test_size = 0.2, random_state = 42)
+
+scaler = StandardScaler()
+X_train = scaler.fir_transform(X_train)
+X_test = scaler.transform(X_test)
+
+pca = PCA(n_components = 2)
+X_train_pca = pca.fit_transform(X_train)
+X_test_pca = pca.fit_transform(X_test)
+
+svm_linear_pca = SVC(kernel = 'linear', probability = True)
+svm_linear_pca.fit(X_train_pca, y_train)
+
+x_min, x_max = X_train_pca[:, 0].min() - 1, X_train_pca[:, 0].max() + 1
+y_min, y_max = X_train_pca[:, 1].min() - 1, X_train_pca[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, y_max, 0.1), np.arange(y_min, y_max, 0.1))
+Z = svm_linear_pca.predict(np.c_[xx_ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+plt.figure(figsize=(7, 7))
+plt.countourf(xx, yy, Z, alpha = 0.5, cmap = 'coolwarm')
+plt.scatter(X_train_pca[:, 0], X_train_pca[:, 1], c = y_train, alpha = 0.5, cmap = 'coolwarm')
+
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.title('SVM with linear kernel on PCA - Decision Boundary')
+plt.colorbar(label = 'Class')
+plt.show()
+
+auc = roc_auc_score(y_test, svm_rbf.predict_proba(X_test)[:, 1])
+f1 = f1_score(y_test, svm_rbf, predict(X_test))
+print(f'SVM с ядром rbf: ROC-AUC: {auc}, F1: {f1}')
+
+logreg_pca = LogisticalRegression()
+logreg_pca.fit(X_train_pca, y_train)
+
+h = .02
+x_min, x_max = X_train_pca[: 0].min() - 1, X_train_pca[:, 0].max() + 1
+y_min, y_max = X_train_pca[: 1].min() - 1, X_train_pca[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+
+Z = longreg_pca.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+plt.countour(xx, yy, Z, cmap = 'coolwarm', alpha = 0.8)
+plt.scatter(X_train_pca[:, 0], X_train_pca[:, 1], c = y_train, cmap = 'coolwarm', edgecolor = 'k')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
