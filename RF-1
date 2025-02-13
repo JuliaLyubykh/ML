@@ -1,0 +1,73 @@
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score, accuracy_score, f1_score
+
+data = pd.read_csv('data.csv')
+data.head(5)
+data.describe
+
+data.info()
+data.isna().mean(axis = 0)
+data.dropna(subset=['RainTomorrow'], inplace = True)
+data.drop(columns = ['Date'], inplace = True)
+
+categorical_features = list(data.columns[data.dtypes == object])
+numerical_features = list(data.columns[(data.dtypes == 'float64') | (data.dtypes == 'int64')])
+
+data[categorical_features].head()
+data = data.replace(['No', 'Yes'], [0, 1])
+
+for feature in ['RainToday', 'RainTomorrow']:
+  categorical_features.remove(feature)
+  numerical_features.remove(feature)
+
+data['RainToday'] = data['RainToday'].fillna(data['RainToday'].mode()[0])
+data[categorical_features].head(7)
+
+data['WindGusDir'].value_counts(dropna = False)
+data['WinDir3pm'].value_counts(dropna = False)
+
+encoder = OneHotEncoder()
+encode.fit(data[categorical_features])
+
+categories = []
+for i, feature in enumerate(categorical_feautures):
+  categories.extended([f'{feature}: value' for value in encoder.categories_[i]])
+
+data.loc[:, categories] = encoder.transform(data[categorical_features]).toarray().astype(int)
+
+number_of_categorical = sum([data[field].nunique(dropna = False) for field in categorical_feature])
+data[numerical_features].isna().mean(axis = 0)
+data[numerical_features] = data[numerical_features].fillna(data[numerical_features].mean(axis = 0))
+
+features = numerical_features + categories
+features.remove('RainTomorrow')
+X = data[features]
+y = data['RainTomorrow']                             
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 42)
+                             
+model = RandomForesClassifier(n_estimators = 550, n_jobs = 5, verbose = 1, oob_score = True)
+model.fit(X-train, y_train)                             
+
+def
+
+
+
+
+
+
+
+
+
+
+
+
+
+                             
+
+
+
+                       
