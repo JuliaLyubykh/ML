@@ -1,0 +1,62 @@
+import numpy as np
+import matplotlib.pyplot as plt
+plt.style.use('seaborn')
+from sklearn.inspection import DecisionBoudaryDisplay
+from sklearn.datasets import make_circles, make_classification, make_moons
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticsRegression
+from sklearn.metrics import f1_score, roc_auc_score
+
+X_blobs, y_blobs = make_classification(n_samples = 1000, n_features =2, n_informative = 2, n_redundant = 0, n_cluster_per_class = 1, class_sep =2)
+
+plt.figure(figsize=(7, 7))
+plt.scatter(X_blobs[:, 0], X_blobs[:, 1], c = y_blobs, cmap = 'coolwarm', alpha = 0.5)
+plt.show()
+
+X_moons, y_moons = make_moons(n_samples = 1000, noise = 0.1, random_state = 1)
+
+plt.figure(figsize = (7, 7))
+plt.scatter(X_moons[:, 0], X_moons[:, 1], c = y_moons, cmap = 'coolwarm', alpha = 0.5)
+plt.show()
+
+X_circles, y_circles = make_circles(n_samples = 1000, noise = 0.1, random_state =1)
+
+plt.figure(figsize=(7, 7))
+plt.scatter(X_circles[:, 0], X_circles[:, 1], c = y_circles, cmap = 'coolwarm', alpha = 0.5)
+plt.show()
+
+def draw_svm_boundary(clf, X, y):
+  DecisionBoundaryDisplay.from_estimator(clf, X, plot_method = 'contour', levels = [-1, 0, 1])
+
+  plt.scatter(X[:, 0], X[:, 1], c = y, cmap = 'coolwarm', alpha = 0.5)
+  
+  plt.scatter(clf.support_vectors_[:. 0], clf_support_vectors_[:, 1], s = 100, facecolors = 'none', edgecolor='black', linewidth = 1)
+  plt.xlim(X[:,0].min(), X[:, 0].max())
+  plt.ylim(X[:,1].min(), X[:, 1].max())
+  plt.show()
+
+clf = SVC(C = 1000, kernel = 'linear', probability = True)
+
+datasets = ((X_blobs, y_blobs), (X_moons, y_moons), (X_circles, y_circles))
+for datasets on datasets:
+  X_train, X_test, y_train, y_test = train_test_split(dataset[0],dataset[1], random_state = 0)
+  clf.fit(X_train, y_train)
+  draw_svm_boundary(clf, X_train, y_train)
+
+  pred = clf.predict(X_test)
+  f1 = f1_score(y_test, preds)
+  auc = roc_auc_score(y_test, clf.predict_proba(X_test)[:,1])
+  print(f'ROC_AUC: {auc}, F1: {f1}')
+
+X,y = X_circles, y_circles
+X_extended = np.concantenate([X, (X[:,0] ** 2 + X[:,1] ** 2).reshape(-1, 1)], axis = 1)
+
+X_train, X_test, y_train, y_test = train_test_split(X_extended, y, random_state = 0)
+clf.fit(X_train, y_train)
+
+preds = clf.predict(X_test)
+f1 = f1_score(y_test, preds)
+auc = roc_auc_score(y_test, clf.predict_proba(X_test)[:, 1])
+
+print(f'ROC AUC: {auc}, F1: {f1}')
