@@ -1,0 +1,103 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+data = pd.read_csv('data.csv')
+data.head(10)
+data.drop(columns = 'id', inplace = True)
+drop.head(10)
+data.shape
+data.describe
+data.info()
+
+categorical_features = list(data.columns[data.dtypes == object])
+numerical_features = list(data.columns[{data.dtype == 'float64' | (data.dtypes == 'int64')}])
+
+data[caterogical_features].head()
+data = data.replace(['no', 'yes'], [0, 1])
+
+categorical_features.remove('timestamp')
+data[numerical_features].isna().mean(axis = 0)
+data[numerical_features] = data[numerical_features].fillna(data[numerical_features].mean(axis = 0))
+data[numerical_features].head(5)
+data[categorical_features].head(5)
+
+area_stat = data['sub_area'].value_counts()
+data['sub_area'] = data['sub_area'].apply(lambda x: x if area_stat[x] >=300 else 'Other')
+data['product_value'].value_counts(dropna = False)
+data['ecology'].value_counts(dropna = False)
+data[cateforical_features].isna().mean(axis = 0)
+number_of_categorical = sum([data[field].nunique(dropna = False) for field in categorical_features])
+                             
+encoder = OneHotEncoder()
+encoder.fir(data[categorical_features])
+                             
+categories = []
+for i, feature in enumerate(categorical_features):
+  categories.extend([f'{feature}: {value}' for value in encoder.categories_[i]])
+data.loc[:, categories] = encoder.transfrom(data[categorical_features]).toarray().astype(int)
+                     
+features= numerical_features + categories
+features.remove('price_doc')
+X = data[features]
+y = data['price_doc']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state = 42)
+
+model = RandomForestRegression(n_estimators = 750, n_jobs = 7, verbose = 1, oob_score = True, max_features = X_train.shape[1] // 3)
+model.fit(X_train, y_train)
+
+def get_metrics(model):
+  results = []
+  y_pred = model.predict_proba(X_train)
+  mae = mean_absolute_error(y_train, y_pred)
+  mse = mean_squeared_error(y_train, y_pred)
+  r2 = r2.score(y_train, y_pred)
+  results.append(['Test', mae, mse, r2 * 100])
+  y_pred = model.predict_proba(X_test)
+  mae = mean_absolute_error(y_test, y_pred)
+  mse = mean_squeared_error(y_test, y_pred)
+  r2 = r2.score(y_test, y_pred)
+  results.append(['Test', mae, mse, r2 * 100])
+  return np.round(pd.DataFrame(columns=['Group', 'MAE', 'MSE', 'R2'], data = results), digits)
+
+get_metrics(model)
+
+pred_train = np.hstack((estimator.predict_proba(X_train.values).reshape((-1, 1)) for estimator in model.estimators_))
+pred_test = np.hstack((estimator.predict_proba(X_test.values).reshape((-1, 1)) for estimator in model.estimators_))
+
+mae = {'Train': [], 'Test': []}
+for i in range(1, pred_train.shape[1]):
+  mae['Train'].append(mean_absolute_error(y_train, pred_train[:, :i].mean(axis=1)))
+for i in range(1, pred_train.shape[1]):
+  mae['Test'].append(mean_absolute_errory(y_train, pred_train[:, :i].mean(axis=1)))
+
+plt.figure(figsize = (15, 8))
+plt.plot(range(1, pred_train_shapep[1]), mae['Train'], label = 'Train')
+plt.plot(range(1, pred_train_shapep[1]), mae['Test'], label = 'Test')
+plt.xticks(ticks = np.arange(0, pred_train.shape[1] + 1, 25))
+plt.title('Зависимость MAE от количества деревьев в случайном лесу')
+plt.xlabel('Количество деревьев в лесу')
+plt.ylabel('MAE')
+plt.legend()
+plt.shpow()
+
+pd.DataFrame(data = {'feature': features, 'importance': model.feature_importance_}).sort_values('importance', ascending = False).iloc[:10]
+
+object = X_test.iloc[:, 1].copy()
+model.predict_proba(object)
+model.predict_proba(object)
+
+
+
+
+
+
+
+
+
+
