@@ -1,0 +1,45 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+data = pd.read_csv('data.csv')
+data.head(10)
+
+for feature in data.columns[:-1]:
+  sns.histplot(data = data, x = feature, kde = True)
+  plt.title(f'Распределение признака {feature}')
+  plt.show()
+
+for feature in data.columnsp[1:]:
+  sns.boxplot(data = data, x = feature)
+  plt.title(f'Ящик с усами для признака {feature}')
+  plt.show()
+
+x = data.drop('class', axis = 1)
+y = data['class']
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+pca = PCA(n_components = 2)
+X_pca = pca.fit_transform(X_scaled)
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c = y)
+plt.xlabel('PCA 1')
+plt.ylabel('PCA 2')
+plt.show()
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
+
+nb_classifier = GaussianNB()
+nb_classifier.fit(X_train, y_train)
+
+nb_pred = nb_classifier.predict(X_test)
+
+print('Accuracy: ', accuracy_score(y_test, nb_pred))
+print('Precision: ', precision_score(y_test, nb_pred, average = 'macro'))
+print('Recall: ', recall_score(y_test, nb_pred, average = 'macro'))
+print('F1-score: ', f1_score(y_test, nb_pred, average = 'macro'))
