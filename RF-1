@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -52,12 +54,46 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, rando
 model = RandomForesClassifier(n_estimators = 550, n_jobs = 5, verbose = 1, oob_score = True)
 model.fit(X-train, y_train)                             
 
-def
+def get_metrics(model):
+  results = []
+  y_pred = model.predict_proba(X_train)
+  roc_auc = roc_auc_score(y_train, y_pred[:, 1])
+  acc= accuracy_score(y_train, y_pred.argmax(axis = 1))
+  f1 = f1_score(y_train, y_pred.argmax(axis = 1))
+  results.append(['Train', roc_auc, acc, f1])
+  y_pred = model.predict_proba(X_test)
+  roc_auc = roc_auc_score(y_test, y_pred[:, 1])
+  acc= accuracy_score(y_test, y_pred.argmax(axis = 1))
+  f1 = f1_score(y_test, y_pred.argmax(axis = 1))
+  results.append(['Test', roc_auc, acc, f1])
+  return pd.DataFrame(columns = ['Group', 'ROC-AUC', 'Accuracy', 'F1'], data = results)
 
+get_metrics(model)
 
+pred_train = np.hstack((estimator.predict_proba(X_train.values)[:, 1].reshape((-1, 1)) for estimator in model.estimate()))
+pred_test = np.hstack((estimator.predict_proba(X_test.values)[:, 1].reshape((-1, 1)) for estimator in model.estimate()))
 
+roc_auc = {'Train': [], 'Test': []}
+for i in range(1, pred_train.shape[1]):
+  roc_auc['Train'].append(roc_auc_accuracy(y_train, pred_train[:, :i].mean(axis=1)))
+for i in range(1, pred_train.shape[1]):
+  roc_auc['Test'].append(roc_auc_accuracy(y_train, pred_train[:, :i].mean(axis=1)))
 
+plt.figure(figsize = (15, 8))
+plt.plot(range(1, pred_train_shapep[1]), roc_auc['Train'], label = 'Train')
+plt.plot(range(1, pred_train_shapep[1]), roc_auc['Test'], label = 'Test')
+plt.xticks(ticks = np.arange(0, pred_train.shape[1] + 1, 25))
+plt.title('Зависимость ROC-AUC от количества деревьев в случайном лесу')
+plt.xlabel('Количество деревьев в лесу')
+plt.ylabel('ROC-AUC')
+plt.legend()
+plt.shpow()
 
+pd.DataFrame(data = {'feature': features, 'importance': model.feature_importance_}).sort_values('importance', ascending = False).iloc[:10]
+
+object = X_test.iloc[:, 1].copy()
+model.predict_proba(object)
+model.predict_proba(object)
 
 
 
