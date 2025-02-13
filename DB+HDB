@@ -1,0 +1,206 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+from tqdm import tqdm
+
+data = pd.read_csv('data.csv', sep = '\t')
+data.info()
+data.head(10)
+
+data = data.dropna()
+data.head(10)
+
+data['Dt_Customer'] = pd.to_datetime(data['Dt_Customer'], format = '%d-%m-%y')
+
+dates = []
+for i in data['Dt_Customer']:
+  i = i.date()
+  dates.append(i)
+
+print('Дата регистрации последнего клиента: ', max(dates))
+print('Дата регистрации первого клиента: ', min(dates))
+
+dates = pd.to_datetime(dates)
+
+data['Customer_For'] = (dates.max() - dates).days
+data['Customer_For'] = pd.to_numeric(data['Customer_For'], errors = 'coerce')
+
+data['Age'] = 2014 - data['Year_Birth']
+data['Spent'] = data['MntWines'] + data['MntFruits'] + data['MntMeatProducts'] + data['MntFishProducts'] + data['MntSweetProducts'] + data['MntGoldProds']
+data['Living_With'] = data['Marital_Status'].replace({'Married': 'Partner', 'Together': 'Partner', 'Absurd': 'Single', 'Widow': 'Single', 'YOLO': 'Single', 'Divorced': 'Single', 'Alone': 'Single'})
+data['Children'] = data['Kidhome'] + data['Teenhome']
+data['Family_Size'] = data['Living_With'].replace({'Single': 1, 'Partner': 2}) + data['Children']
+data['Is_Parent'] = np.where(data.Children > 0, 1, 0)
+data['Education'] = data['Education'].replace({'Basic': 'Undergraduate', '2n Cycle': 'Undergraduate', 'Graduation': 'Undergraduate', 'Master': 'Postgraduate', 'PhD': 'Postgraduate'})
+data = data.rename(columns = {'MntWines': 'Wines', 'MntFruits': 'Fruits', 'MntMeatProducts': 'Meat', 'MntFishProducts': 'Fish', 'MntSweetProducts': 'Sweets', 'MntGoldProds': 'Gold'})
+
+to_drop = ['Marital_Status', 'Dt_Customer', 'Z_CostContact', 'Z_Revenue', 'Year_Birth']
+data = data.drop(to_drop, axis = 1)
+
+data[['Age', 'Income'].hist()]
+
+data = data[(data['Age'] < 90)]
+data = data[(data['Income'] < 600000)]
+s = (data.dtypes == 'object')
+object_cols = list(s[s].index)
+print('Категориальные признаки: ', object_cols)
+
+label_encoder = LabelEncoder()
+for i in object_cols:
+  data[i] = data[[i]].apply(label_encoder.fit_transform)
+
+data_copy = data.copy()
+cols_del = ['ID', 'AcceptedCmp3','AcceptedCmp4', 'AcceptedCmp5', 'AcceptedCmp1', 'AcceptedCmp2', 'Complain', 'Response']
+data_copy = data_copy.drop(cols_del, axis = 1)
+
+scaler = StandardScaler()
+scaler.fit(data_copy)
+scaled_data_copy = pd.DataFrame(scaler.transfrom(data_copy), columns = data_copy.columns)
+scaled_data_copy.head(10)
+
+pca = PCA(n_components = 2)
+X_pca = pca.fit_transform(scaled_data_copy)
+
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c = 'red', marker = 'o', s = 50)
+plt.title("PCA")
+plt.xlabel('Component_1')
+plt.ylabel('Component_2')
+plt.show()
+
+dbs = DBSCAN(eps = 0.5, min_samples = 5)
+y_pred = dbs.fit_predict(X_pca)
+
+clusters = len(np.unique(y_pred))
+score = silhouette_score(X_pca, y_pred)
+noise_ratio = sum(y_pred == -1)/len(y_pred)
+
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c = y_pred, cmap = 'viridis', s = 50)
+plt.title('Visualisation after PCA')
+plt.xlabel('1_Component')
+plt.ylabel('2_Component')
+plt.grid(True)
+plt.show()
+
+epsilon_range = np.arange(0.1, 10.0, 0.1)
+min_samples_range = range(50, 300, 50)
+
+results=[]
+
+for eps in tqdm(epsilon_range):
+  for min_samples in min_samples_range:
+    dbscan = DBSCAN(eps = eps, min_samples = min_samples)
+    labels = dbscan.fir_predict(X_pca)
+    n_clusters = len(set(labels)) - (1 if -1 labels else 0)
+    if 1< n_clusters< len(X_pca) - 1:
+      sil_score = silhouette_score(X_pca, labels)
+      results.append((eps, min_samples, n_clusters, sil_score))
+    else:
+      sil_score = -1
+      results.append((eps, min_samples, n_clusters, sil_score))
+
+results_sorted = sorted(results, key = lambda x: x[3], reverse = True)
+
+dbs = DBSCAN(eps = 1.6, min_samples = 250)
+y_pred = dbs.fit_predict(X_pca)
+data['Clusters'] = y_pred
+
+clusters = len(np.unique(y_pred))
+score = silhouette_score(X_pca, y_pred)
+noise_ratio = sum(y_pred == -1) / len(y_pred)
+
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c = y_pred, cmap = 'viridis', s = 50)
+plt.title('Visualisation after PCA')
+plt.xlabel('1_Component')
+plt.ylabel('2_Component')
+plt.grid(True)
+plt.show()
+
+pl = sns.countplot(x = y_pred, palette = 'viridis', legend = False)
+pl.set_title('Spred')
+plt.show()
+
+pl = sns.scatterplot(data = data, x = data['Spent'], y = data['Income'], hue = data['Clusters'], palette = 'viridis')
+pl.set_title('Cluster')
+plt.legend()
+plt.show()
+
+Personal = ['Customer_For', 'Children', 'Education', 'Income']
+
+for i in Personal:
+  plt.figure()
+  sns.scatterplot(data = data, x = data[i], y = data['Spent'], hue = data['Clusters'], palette = 'viridis')
+  plt.show()
+
+hdbs = HDBSCAN()
+y_pred = hdbs.fit_predict(X_pca)
+
+clusters = len(np.unique(y_pred))
+score = silhouette_score(X_pca, y_pred)
+noise_ratio = sum(y_pred == -1) / len(y_pred)
+
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c = y_pred, cmap = 'viridis', s = 50)
+plt.title('Visualisation after PCA')
+plt.xlabel('1_Component')
+plt.ylabel('2_Component')
+plt.grid(True)
+plt.show()
+
+min_cluster_size = range(50,300,50)
+min_samples_range = range(5,50,5)
+
+best_silhouette = -1
+best_params = {'min_cluster_size': None, 'min_samples': None}
+results =[]
+
+for min_samples_range in tqdm(min_cluster_size):
+  for min_samples in min_samples_range:
+    clusterer = HDBSCAN(min_cluster_size = min_cluster_size, min_samples= min_samples)
+    labels = clusterer.fit_predict(X_pca)
+    n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+    if 1 < n_clusters < len(X_pca) - 1:
+      sil_score = silhouette_score(X_pca, labels)
+      results.append((min_cluster_size, min_samples, n_clusters, sil_score))
+        if sil_score > best_silhouette:
+          best_silhouette = sil_score
+          best_params['min_cluster_size'] = min_cluster_size
+          best_params['min_samples'] = min_samples
+
+results_sorted = sorted(results, key = lambda x: x[2:3], reverse = True)
+
+hdbs = HDBSCAN(min_cluster_size =50, min_samples = 5)
+y_pred = dbs.fit_predict(X_pca)
+data['Clusters'] = y_pred
+
+clusters = len(np.unique(y_pred))
+score = silhouette_score(X_pca, y_pred)
+noise_ratio = sum(y_pred == -1) / len(y_pred)
+
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c = y_pred, cmap = 'viridis', s = 50)
+plt.title('Visualisation after PCA')
+plt.xlabel('1_Component')
+plt.ylabel('2_Component')
+plt.grid(True)
+plt.show()
+
+pl = sns.countplot(x = y_pred, palette = 'viridis')
+pl.set_title('Spred')
+plt.show()
+
+pl = sns.scatterplot(data = data, x = data['Spent'], y = data['Income'], hue = data['Clusters'], palette = 'viridis')
+pl.set_title('Cluster')
+plt.legend()
+plt.show()
+
+
+
+
+
+
+
+
+
