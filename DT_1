@@ -1,0 +1,54 @@
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+
+data = pd.read_csv('data.csv')
+data.head(10)
+data.shape
+
+data.isna().mean(axis = 0)
+
+categorical_features = []
+numerical_features = []
+
+company_stat = data['Company (Make-if known)'].value_counts()
+data['company'] = data['Company (Make-if known)'].apply(lambda x: x if company_stat[x] >= 18 else 'Other')
+data['company'].value_counts()
+categorical_features.append('company')
+
+origin_stat = data['Specific Bean Origin or Bar Name'].value_counts()
+data['origin'] = data['Specific Bean Origin or Bar Name'].apply(lambda x: x if origin_stat[x] >= 18 else 'Other')
+data['origin'].value_counts()
+categorical_features.append('origin')
+
+numerical_features.extend(['REF', 'Review Date'])
+
+data['Cocoa Percent'].value_counts().sort_index()
+data['cocoa'] = data['Cocoa Percent'].str[:-1].astype(float)
+numerical_features.append('cocoa')
+
+location_stat = data['Company Location'].value_counts()
+data['location'] = data['Company Location'].apply(lambda x: x if location_stat[x] >= 18 else 'Other')
+data['location'].value_counts()
+categorical_features.append('location')
+
+data['Broad Bean Origin'].value_counts(dropna = False)
+data['bean_origin'] = data['Broad Bean Origin'].apply(lambda x: x if bean_stat[x] >= 18 else 'Other')
+data['bean_origin'].value_counts()
+categorical_features.append('bean_origin')
+
+type_stat = data['Bean Type'].value_counts(dropna = False)
+data['bean_type'] = data['Bean Type'].apply(lambda x: x if type_stat[x] >= 18 else 'Other')
+data['bean_type'].value_counts()
+categorical_features.append('bean_type')
+
+sum([data[feature].nunique() for feature in categorical_features])
+
+encoder = OneHotEncoder()
+encoder.fit(data[cateegorical_features])
+
+categories = []
+for i, feature in enuminate(categorical_features):
+  categories.extend([f'{feature}: {value}' for value in encoder.categories_[i]])
+data.loc[:, categories] = encoder.transfrom(data[categorical_features])
+
+
