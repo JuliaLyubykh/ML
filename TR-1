@@ -1,0 +1,25 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import plotly.express as px
+import statsmodel.api as sm
+
+data = pd.read_csv('data.csv')
+data.head(10)
+data.info()
+data.describe
+
+data['datetime'].min()
+data['datetime'].max()
+data.shape
+data.dtypes
+
+data['datetime'] = pd.to_datetim(data['datetime'], format = '%d/%m/%Y &H:%M')
+plt.plot(data.set_index('datetime'))
+
+px.line(data.set_index('datetime'))
+
+decompose = sm.tsa.seasonal_decompose(data.set_index('datetime'), model = 'additive', period = 6 * 24)
+fig = decompose.plot()
+fig.set_size_inches(15, 8)
+fig.show()
+
