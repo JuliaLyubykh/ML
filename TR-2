@@ -1,0 +1,36 @@
+import pandas as pd
+from ruptures.detection import Binseg
+from etna.datasets.tsdataset import TSDataset
+from etna.transfroms import LagTransfrom, LinearTrendTransform
+from etna.analysis import acf_plot,  plot_correlation_matrix, plot_trend, get_anomaly_density, find_change_points, plot_change_points_interactive, plot_time_series_change_points
+
+data = pd.read_csv('data.csv')
+data.head()
+
+data['segment'].unique()
+
+dataset = TSDataset.to_dataset(data)
+ts = TSDataset(dataset, freq = 'D')
+ts.head(10)
+
+ts.columns
+ts.descibe()
+ts.info()
+
+ts.plot()
+
+acf_plot(ts, lags=21)
+
+lags = LagTransform(in_column = 'target', lags = [1, 7], out_column = 'lag')
+ts.fit_transform([lags])
+
+plot_correlation_matrix(ts, segments = ['segment_a', 'segment_b'], method = 'spearman', vmin = 0.5, vnmax = 1)
+
+trends = [LinearTrendTransform(in_column = 'target', poly_degree = 1), LinearTrendTransform(in_column = 'target', poly_degree = 2), LinearTrendTransform(in_column = 'target', poly_degree = 3)]
+plot_trend(ts, trend_transfrom = trends)
+
+anomaly_dict = get_anomalies_density(ts, window_size = 18, distance_coef = 1, n_neighbors = 4)
+plot_anomalies(ts, anomaly_dict)
+
+change_points = find_change_points(ts = ts, in_column = 'target', change_point_model = Binseg(), pen = 1e5)
+plot_time_series_with_change_points(ts = ts, change_points = change_points)
