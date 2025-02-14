@@ -1,0 +1,94 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import pylab as plt
+import plotly.graph_objects as go
+import statsmodel.graphics.tsaplots as sgt
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.hotwinters import SimpleExpSmoothing, ExperimentalSmoothing
+from statsmodels.tsa.seasonal import STL
+from sklearn.metrics import mean_squared_error
+
+data = pd.read_csv('data.csv', parse_dates = ['date'], index_col = 'date')
+data.head(10)
+
+s = data['value']
+
+plt.figure(figsize=(20,10))
+plt.plot(s)
+
+_ = sgt.plot_acf(s)
+
+simple_seasonal_decompose = seasonal_decompose(s, model = 'multiplicative')
+_ = simple_seasonal_decompose.plot()
+
+stl_decompose_reuslt = STL(np.log(s), period = 12).fit()
+_ = stl_decompose_result.plot()
+
+simple_seasonal_decompose.resid.mean()
+np.exp(stl_decompose_result.resid).mean()
+
+sns.displot(simple_seasonal_decompose.resid, label = 'simple')
+sns.displot(stl_decompose_result.resid, label = 'stl')
+plt.legend()
+
+train_data = s[s.index < '2007-01-01']
+predict_data = s[s.index >= '2007-01-01']
+
+train_data.shape
+predict_data.shape
+
+train_data.index.min()
+train_data.index.max()
+
+predict_data.index.min()
+predict_data.index.max()
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x = train_data.index, y = train_data.index, mode = 'lines', name = 'train'))
+fig.add_trace(go.Scatter(x = predict_data.index, y = predict_data.index, mode = 'lines', name = 'test'))
+fig.show()
+
+fit1 = SimpleExpSmoothing(train_data).fit(smoothing_level = 0.2, optiomized = False)
+fit2 = SimpleExpSmoothing(train_data).fit(smoothing_level = 0.6, optiomized = False)
+fit3 = SimpleExpSmoothing(train_data, initialization_method = 'estimated').fit()
+fcast = [model.predict(start = predict_data.index.min(), end = predict_data.index.max()) for model in [fit1, fit2, fit3]]
+
+fit_models = [fit1, fit2, fit3]
+last_alpha = fit3.model.params['smoothing_level']
+labels = ['alpha = 0.2', 'alpha = 0.6', f'alpha = {last_alpha}']
+
+params = ['smoothing_level']
+results = pd.DataFrame(index = ['alpha', 'SSE', 'test MSE'], columns = labels)
+
+for index in [1, 2, 3]:
+  results[labels[index-1] = [fit_models[index-1].model.params['smoothing_level'], fit_models[index=1].sse, mean_squared_error(predict_data, fcast[index-1])]]
+
+fig = go.Figure(layout = go.Layout(height = 600, width = 1400))
+fig.add_trace(go.Scatter(x = train_data.index, y = list(train_data), mode = 'lines', name = 'train'))
+fig.add_trace(go.Scatter(x = predict_data.index, y = list(predict_data), mode = 'lines', name = 'test'))
+
+fot index in [1,2,3]:
+  fig.add_trace(go.Scatter(x = fcast[index-1].index, y = fcast[index-1].values, mode = 'lines', name = labels[index-1]))
+fig.show()
+
+model_hw = ExperimentalSmoothing(train_data, trend = 'add', seasonal = 'multiplicative', seasonal_periods = 12).fit()
+
+fig = go.Figure(layout = go.Layout(height = 600, width = 1400))
+f = model_hw.predict(start = predict_data.index.min(), end = predict_data.index.max())
+fig.add_trace(go.Scatter(x = train_data.index, y = list(train_data), mode = 'lines', name = 'train'))
+fig.add_trace(go.Scatter(x = predict_data.index, y = list(predict_data), mode = 'lines', name = 'test'))
+fig.add_trace(go.Scatter(x = f.index, y = f.values, mode = 'lines', name = 'hw'))
+fig.show()
+
+mean_squared_error(predict_data, f)
+
+
+
+
+
+
+
+
+
+
